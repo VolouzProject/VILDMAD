@@ -1,16 +1,43 @@
 package com.example.mth.vildmad;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.Toast;
 
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -21,21 +48,105 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+import java.util.Date;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+
+
     private GoogleMap mMap;
+    private LocationCallback mLocationCallback;
+    private FusedLocationProviderClient mFusedLocationClient;
+    public SeekBar seekBar;
+    private Location loc_plant=new Location("my plant");
+    private int distanceInMetersToPlant;
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    View view =MapsActivity.this.getSupportFragmentManager().findFragmentById(R.id.distanceToPlant).getView().findViewById(R.id.seekBar);
+                    seekBar = view.findViewById(R.id.seekBar);
+
+
+                    if (loc_plant.getLongitude()!=0.0 && loc_plant.getLatitude()!=0.0){
+
+                        distanceInMetersToPlant=(int)location.distanceTo(loc_plant);
+                        if (distanceInMetersToPlant>=5000){
+                            seekBar.setProgress(distanceInMetersToPlant);
+                            Toast.makeText(MapsActivity.this,"Too far From plant",
+                                    Toast.LENGTH_SHORT).show();}
+                        else if(distanceInMetersToPlant<5000 && distanceInMetersToPlant>2000){
+                            seekBar.setProgress(distanceInMetersToPlant);
+                            Toast.makeText(MapsActivity.this,"Not that far from plant",
+                                    Toast.LENGTH_SHORT).show();}
+                        else if(distanceInMetersToPlant<=2000 && distanceInMetersToPlant>500){
+                            seekBar.setProgress(distanceInMetersToPlant);
+                            Toast.makeText(MapsActivity.this,"Not that that far from plant",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        else{
+                            seekBar.setProgress(distanceInMetersToPlant);
+                            Toast.makeText(MapsActivity.this,"close to plant",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+
+
+
+
+
+
+
+                    
+                    Bundle b=new Bundle();
+                    b.putDouble("key",location.getLongitude());
+                    MapsActivity.this.getSupportFragmentManager().findFragmentById(R.id.distanceToPlant).setArguments(b);
+                }
+            };
+        };
+
+
+
     }
+
+    protected void createLocationRequest() {
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                mLocationCallback,
+                null);
+    }
+
+
+
     private BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
         Canvas canvas = new Canvas();
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -45,19 +156,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
         mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
+        createLocationRequest();
+
         Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
         final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
         LatLng location = new LatLng(48, 2);
@@ -66,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onMapClick(final LatLng point) {
+
 
                 LayoutInflater description_plant = LayoutInflater.from(MapsActivity.this);
                 final View alertDialogView = description_plant.inflate(R.layout.dialog_plant_description, null);
@@ -76,6 +182,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //if "ok" value of marker's title is value of editText name_plant and description_plant
                 adb.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        loc_plant.setLatitude(point.latitude);
+                        loc_plant.setLongitude(point.longitude);
+                        loc_plant.setTime(new Date().getTime());
+
                          EditText name_plant = (EditText)alertDialogView.findViewById(R.id.plant_name);
                          EditText description_plant = (EditText)alertDialogView.findViewById(R.id.description);
                          mMap.addMarker(new MarkerOptions()
@@ -84,6 +194,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                  .snippet(description_plant.getText().toString())
                                  .icon(markerIcon)
                          );
+
+
+
+
 
                     }
                 });
@@ -98,6 +212,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+
+
     }
+
 
 }

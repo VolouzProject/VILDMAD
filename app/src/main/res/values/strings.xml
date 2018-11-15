@@ -5,6 +5,7 @@
     <string name="title_compass">Landscapes</string>
     <string name="title_plant_name">Plant name</string>
     <string name="title_plant_description">Plant Description</string>
+    <string name="greet">Welcome</string>
     <string name="title_activity_login">Sign in</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -19,4 +20,32 @@
         completions."
     </string>
     <string name="title_activity_maps">Map</string>
+    <string name="new_bonus_points">String</string>
+    <string name="notice">note</string>
+    <string name="login">login</string>
+    <string name="account_details">account details</string>
+    <string name="change_password">change password</string>
+    <string name="log_out">log out</string>
+    <string name="mainAppID">main appID</string>
+    <string name="welcome_to_your_working_app_id_sample">welcome to your app</string>
+    <string name="guest">guest</string>
+    <string name="hintText">hint text</string>
+    <string name="brand">brand</string>
+    <string name="profile_icon">profil icon</string>
+    <string name="choice">choice</string>
+    <string name="view_token">view token</string>
+    <string name="description">description</string>
+    <string name="selected_icon">selected icon</string>
+    <string name="logged_in_again_notice">logged in again notice</string>
+    <string name="login_back_notice">login back notice</string>
+    <string name="logged_in_new_notice">logged new notice</string>
+    <string name="login_back_and_change_login_notice">login back and change login notice</string>
+    <string name="new_guest_notice">new guest notice</string>
+    <string name="progressive_auth_notice">progressive auth notice</string>
+    <string name="returning_guest_notice">returning guest notice</string>
+    <string name="switch_to_identified_notice">switch to identified notice</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>
