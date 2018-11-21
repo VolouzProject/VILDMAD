@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity{
                 case R.id.navigation_home:
                     return true;
                 case R.id.navigation_login:
-                    //startActivity( new Intent(MainActivity.this, LoginActivity.class));
+                    startActivity( new Intent(MainActivity.this, LoginActivity.class));
                 case R.id.navigation_myfindings:
                     //startActivity( new Intent(MainActivity.this, DisplayMap.class));
                     return true;
@@ -48,7 +48,8 @@ public class MainActivity extends AppCompatActivity{
         AppID.getInstance().initialize(getApplicationContext(), authTenantId, AppID.REGION_UK);
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
+        Intent intent = new Intent(this, ExitService.class);
+        startService(intent);
 
 
     }
