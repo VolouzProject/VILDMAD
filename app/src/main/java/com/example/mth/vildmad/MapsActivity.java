@@ -64,6 +64,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public SeekBar seekBar;
     private Location loc_plant=new Location("my plant");
     private int distanceInMetersToPlant;
+    Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
+    final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
 
 
 
@@ -114,19 +116,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
-
-
-
-
-
-
-
-
-                    
                     Bundle b=new Bundle();
                     b.putDouble("key",location.getLongitude());
                     MapsActivity.this.getSupportFragmentManager().findFragmentById(R.id.distanceToPlant).setArguments(b);
                 }
+                //Get plants from database
+                getPlants();
             };
         };
 
@@ -162,52 +157,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
         createLocationRequest();
-
-        Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
-        final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
         LatLng location = new LatLng(48, 2);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,9));
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
             @Override
             public void onMapClick(final LatLng point) {
-
-
-                LayoutInflater description_plant = LayoutInflater.from(MapsActivity.this);
-                final View alertDialogView = description_plant.inflate(R.layout.dialog_plant_description, null);
-                //create alertDialog
-                AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
-                //set our view for alertDialog
-                adb.setView(alertDialogView);
-                //if "ok" value of marker's title is value of editText name_plant and description_plant
-                adb.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        loc_plant.setLatitude(point.latitude);
-                        loc_plant.setLongitude(point.longitude);
-                        loc_plant.setTime(new Date().getTime());
-
-                         EditText name_plant = (EditText)alertDialogView.findViewById(R.id.plant_name);
-                         EditText description_plant = (EditText)alertDialogView.findViewById(R.id.description);
-                         mMap.addMarker(new MarkerOptions()
-                                 .title(name_plant.getText().toString())
-                                 .position(point)
-                                 .snippet(description_plant.getText().toString())
-                                 .icon(markerIcon)
-                         );
-
-
-
-
-
-                    }
-                });
-                adb.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                });
-                adb.show();
-
-
+                createPlant(point, markerIcon);
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(point));
             }
         });
@@ -215,6 +171,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
+    private void createPlant(final LatLng point, final BitmapDescriptor markerIcon){
+        LayoutInflater description_plant = LayoutInflater.from(MapsActivity.this);
+        final View alertDialogView = description_plant.inflate(R.layout.dialog_plant_description, null);
+        //create alertDialog
+        AlertDialog.Builder adb = new AlertDialog.Builder(MapsActivity.this);
+        //set our view for alertDialog
+        adb.setView(alertDialogView);
+        //if "ok" value of marker's title is value of editText name_plant and description_plant
+        adb.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                loc_plant.setLatitude(point.latitude);
+                loc_plant.setLongitude(point.longitude);
+                loc_plant.setTime(new Date().getTime());
 
+                EditText name_plant = (EditText)alertDialogView.findViewById(R.id.plant_name);
+                EditText description_plant = (EditText)alertDialogView.findViewById(R.id.description);
+                mMap.addMarker(new MarkerOptions()
+                        .title(name_plant.getText().toString())
+                        .position(point)
+                        .snippet(description_plant.getText().toString())
+                        .icon(markerIcon)
+                );
+                //Put Plant in DB
 
+            }
+        });
+        adb.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        adb.show();
+    }
+
+    private void getPlants(){
+        //Get the plants
+
+        //put plants on the map
+        for(int i = 0; i < 1; i++){
+            LatLng point = new LatLng(48, 2);
+            createPlant(point,markerIcon);
+        }
+    }
 }
