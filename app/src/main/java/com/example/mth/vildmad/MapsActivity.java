@@ -29,6 +29,11 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.common.api.Response;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -56,7 +61,12 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -71,6 +81,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
     final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
     private String plantURL = "https://mysterious-fjord-16136.herokuapp.com/api/Plants/";
+    private RequestQueue queue;
+    private JsonObjectRequest jsonRequest;
+    private CountDownLatch waiter;
 
 
 
@@ -78,7 +91,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
+        queue = Volley.newRequestQueue(this);
+        //Get plants from database
+        getPlants();
 
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -124,8 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     b.putDouble("key",location.getLongitude());
                     MapsActivity.this.getSupportFragmentManager().findFragmentById(R.id.distanceToPlant).setArguments(b);
                 }
-                //Get plants from database
-                getPlants();
+
             };
         };
 
@@ -208,17 +222,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }catch (JSONException e){
                     e.printStackTrace();
                 }
-                /*JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, plantURL, jsonObject, new Response.Listener<JSONObject>(){
+                jsonRequest = new JsonObjectRequest(Request.Method.POST, plantURL, jsonObject, new com.android.volley.Response.Listener<JSONObject>() {
                     @Override
-                    public void onResponse(JSONObject response){
+                    public void onResponse(JSONObject response) {
 
                     }
-                }, new Response.ErrorListener(){
+                }, new com.android.volley.Response.ErrorListener(){
                     @Override
-                    public void onErrorResponse(VolleyError error){
+                    public void onErrorResponse(VolleyError error) {
 
                     }
-                });*/
+                });
+                queue.add(jsonRequest);
             }
         });
         adb.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -229,8 +244,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getPlants(){
+        ArrayList plants = new ArrayList();
         //Get the plants
+        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, plantURL, null, new com.android.volley.Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                System.out.println("HELLO " + response.toString());
+                waiter.countDown();
+            }
+        }, new com.android.volley.Response.ErrorListener(){
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                waiter.countDown();
+            }
+        });
+        queue.add(jsonRequest);
+        waiter = new CountDownLatch(1);
 
+        try{
+            waiter.await(30,TimeUnit.SECONDS);
+        }catch(InterruptedException e){
+            e.printStackTrace();
+        }
         //put plants on the map
         for(int i = 0; i < 1; i++){
             LatLng point = new LatLng(48, 2);
