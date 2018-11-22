@@ -30,6 +30,7 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.common.api.Response;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -52,6 +53,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Date;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -66,7 +70,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int distanceInMetersToPlant;
     Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
     final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
-
+    private String plantURL = "https://mysterious-fjord-16136.herokuapp.com/api/Plants/";
 
 
 
@@ -194,7 +198,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .icon(markerIcon)
                 );
                 //Put Plant in DB
+                JSONObject jsonObject = new JSONObject();
+                try{
+                    jsonObject.put("username","admin");
+                    jsonObject.put("plantname",name_plant.getText().toString());
+                    jsonObject.put("lat",point.latitude);
+                    jsonObject.put("lon",point.longitude);
+                    jsonObject.put("description",description_plant.getText().toString());
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+                /*JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, plantURL, jsonObject, new Response.Listener<JSONObject>(){
+                    @Override
+                    public void onResponse(JSONObject response){
 
+                    }
+                }, new Response.ErrorListener(){
+                    @Override
+                    public void onErrorResponse(VolleyError error){
+
+                    }
+                });*/
             }
         });
         adb.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
