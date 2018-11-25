@@ -32,6 +32,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -58,6 +59,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,14 +78,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     public SeekBar seekBar;
-    private Location loc_plant=new Location("my plant");
+    private Location loc_plant;
     private int distanceInMetersToPlant;
-    Drawable circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
-    final BitmapDescriptor markerIcon = getMarkerIconFromDrawable(circleDrawable);
+    private Drawable circleDrawable;
+    private BitmapDescriptor markerIcon;
     private String plantURL = "https://mysterious-fjord-16136.herokuapp.com/api/Plants/";
     private RequestQueue queue;
     private JsonObjectRequest jsonRequest;
     private CountDownLatch waiter;
+    private ArrayList<Plant> plants = new ArrayList<>();
 
 
 
@@ -94,7 +97,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         queue = Volley.newRequestQueue(this);
         //Get plants from database
         getPlants();
-
+        circleDrawable = getResources().getDrawable(R.drawable.ic_lotus_flower);
+        markerIcon = getMarkerIconFromDrawable(circleDrawable);
+        loc_plant = new Location("my plant");
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -225,15 +230,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 jsonRequest = new JsonObjectRequest(Request.Method.POST, plantURL, jsonObject, new com.android.volley.Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
+                        System.out.println("GOT A RESPONSE: " + response.toString());
                     }
                 }, new com.android.volley.Response.ErrorListener(){
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
+                        System.out.println("Got and error :( --------------------------------------- " + error.toString());
                     }
                 });
                 queue.add(jsonRequest);
+                //Refresh plants list to get the new plant with its id...
+                getPlants();
             }
         });
         adb.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -244,12 +251,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getPlants(){
-        ArrayList plants = new ArrayList();
         //Get the plants
-        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, plantURL, null, new com.android.volley.Response.Listener<JSONObject>() {
+        JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, plantURL, null, new com.android.volley.Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(JSONObject response) {
-                System.out.println("HELLO " + response.toString());
+            public void onResponse(JSONArray response) {
+                plants = new ArrayList<>();
+                try {
+                    for(int i = 0; i < response.length(); i++){
+                        JSONObject jsonPlant = response.getJSONObject(i);
+                        Plant newPlant = new Plant(jsonPlant.getString("plantname"),jsonPlant.getString("_id"),jsonPlant.getString("username"),Float.parseFloat(jsonPlant.getString("lat")),Float.parseFloat(jsonPlant.getString("lon")),jsonPlant.getString("description"));
+                        plants.add(newPlant);
+                    }
+                    for(int i = 0; i < plants.size();i++){
+                        System.out.println(plants.get(i).toString());
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 waiter.countDown();
             }
         }, new com.android.volley.Response.ErrorListener(){

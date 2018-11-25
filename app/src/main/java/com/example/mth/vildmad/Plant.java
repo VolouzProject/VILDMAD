@@ -18,6 +18,18 @@ public class Plant {
         this.description = description;
     }
 
+    @Override
+    public String toString() {
+        return "Plant{" +
+                "plantName='" + plantName + '\'' +
+                ", ID='" + ID + '\'' +
+                ", owner='" + owner + '\'' +
+                ", lat=" + lat +
+                ", lon=" + lon +
+                ", description='" + description + '\'' +
+                '}';
+    }
+
     public String getPlantName() {
         return plantName;
     }
