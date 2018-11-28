@@ -145,7 +145,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     MapsActivity.this.getSupportFragmentManager().findFragmentById(R.id.distanceToPlant).setArguments(b);
                 }
 
-            };
+            }
         };
 
 
@@ -210,12 +210,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 EditText name_plant = (EditText)alertDialogView.findViewById(R.id.plant_name);
                 EditText description_plant = (EditText)alertDialogView.findViewById(R.id.description);
-                mMap.addMarker(new MarkerOptions()
-                        .title(name_plant.getText().toString())
-                        .position(point)
-                        .snippet(description_plant.getText().toString())
-                        .icon(markerIcon)
-                );
+
                 //Put Plant in DB
                 JSONObject jsonObject = new JSONObject();
                 try{
@@ -255,6 +250,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, plantURL, null, new com.android.volley.Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+                //Does this only clear the markers???
+                mMap.clear();
                 plants = new ArrayList<>();
                 try {
                     for(int i = 0; i < response.length(); i++){
@@ -285,9 +282,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
         //put plants on the map
-        for(int i = 0; i < 1; i++){
-            LatLng point = new LatLng(48, 2);
-            createPlant(point,markerIcon);
+        showPlants();
+    }
+
+    private void showPlants(){
+        for(int i = 0; i < plants.size(); i++){
+            Plant plant = plants.get(i);
+            mMap.addMarker(new MarkerOptions()
+                    .title(plant.getPlantName())
+                    .position(new LatLng(plant.getLat(),plant.getLon()))
+                    .snippet(plant.getDescription())
+                    .icon(markerIcon)
+            );
         }
     }
 }
