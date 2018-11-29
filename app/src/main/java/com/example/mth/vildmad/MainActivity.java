@@ -10,12 +10,21 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.ActivityRecognitionResult;
+import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.Task;
 import com.ibm.cloud.appid.android.api.AppID;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity{
+
+
 
 
 
